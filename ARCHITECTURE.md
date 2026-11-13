@@ -124,8 +124,6 @@ A withheld reading never reuses an old value as current. The last reliable value
 | Temperature | DS18B20, 1 Hz, probe/surface temperature (not core body temperature) |
 | Window | 8 s, 2 s hop, 800 samples per channel |
 
-See [WIRING.md](WIRING.md) for pin connections.
-
 ## Safety boundary
 
 VitalSync is a student engineering prototype. It is not intended to diagnose, treat, triage or independently alarm for medical emergencies, and it must not replace approved clinical monitoring or clinician judgment. SpO2 values are experimental estimates and are not clinically validated.
