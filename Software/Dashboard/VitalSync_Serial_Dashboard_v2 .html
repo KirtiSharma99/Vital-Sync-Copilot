@@ -1,0 +1,385 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VitalSync Serial Monitor</title>
+<style>
+:root{--navy:#0d1b4a;--blue:#2563eb;--blue2:#1d4ed8;--line:#dbe5fb;--bg:#eef3fd;--green:#16a34a;--amber:#d97706;--red:#dc2626;--muted:#5b6b91;--sh:0 4px 18px rgba(30,64,140,.08)}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#f6f9ff,#e9f0fe);font:13px/1.35 Inter,"Segoe UI",Arial,sans-serif;font-weight:400;-webkit-font-smoothing:antialiased;color:var(--navy)}
+svg.i{width:1em;height:1em;flex:none;vertical-align:-.15em}
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh;max-width:1700px;margin:auto}
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;background:#fff;border-right:1px solid var(--line);padding:22px 14px}
+.brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:600;letter-spacing:-.5px;margin:0 8px 28px}
+.logo{width:40px;height:40px;border-radius:12px;background:#0b1f5c;display:grid;place-items:center;color:#38bdf8;font-size:20px}
+.nav button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;padding:13px 14px;margin:3px 0;border-radius:11px;font:600 15px inherit;color:var(--navy);cursor:pointer;text-align:left}
+.nav button .i{font-size:18px;color:#2f5fd0}.nav button:hover{background:#eef3ff}
+.nav button.active{background:linear-gradient(110deg,#3b74f5,#2563eb);color:#fff;box-shadow:0 6px 14px #2563eb40}.nav button.active .i{color:#fff}
+.demo{margin-top:auto;background:#eaf0ff;border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+.demo .i{font-size:32px;color:var(--blue)}.demo b{display:block;font-size:16px}.demo span{font-size:12px;color:var(--muted)}
+.main{padding:24px 28px;min-width:0}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top h1{margin:0;font-size:24px;letter-spacing:-.3px}
+.clock{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600}.clock .i{color:var(--blue);font-size:18px}
+.srv{display:flex;align-items:center;gap:8px;border-radius:12px;padding:10px 16px;font-weight:600;background:#fef3c7;color:#92400e}
+.srv.on{background:#dcfce7;color:#15803d}.srv .i{font-size:18px}
+.btn{border:0;background:linear-gradient(110deg,#3b74f5,#2563eb);color:#fff;padding:10px 16px;border-radius:10px;font:700 14px inherit;cursor:pointer;box-shadow:0 4px 10px #2563eb33}
+.btn.ghost{background:#eef3ff;color:var(--blue2);box-shadow:none;border:1px solid var(--line)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.bar{display:flex;gap:12px;margin:18px 0;flex-wrap:wrap}
+.search{flex:1;min-width:220px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 14px}
+.search input{border:0;outline:0;background:none;padding:13px 0;font:inherit;width:100%}
+.chip{border:1px solid var(--line);background:#fff;border-radius:12px;padding:0 18px;font:600 14px inherit;color:var(--navy);cursor:pointer;min-height:44px}
+.chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.stat{display:flex;align-items:center;gap:16px;border-radius:16px;padding:18px 20px;border:1px solid var(--line);background:#f1f5fe}
+.stat .i{font-size:34px}.stat small{display:block;font-weight:600;font-size:15px}.stat b{font-size:30px;line-height:1.1}
+.stat.g{background:#e8f8ee;border-color:#c9eed7;color:#15803d}.stat.a{background:#fff4dc;border-color:#fbe3a8;color:#b45309}.stat.r{background:#fdeaea;border-color:#f8cccc;color:#b91c1c}
+.stat.b .i{color:var(--blue)}.stat.b{color:var(--navy)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);padding:18px;min-width:0}
+.panel h2{margin:0 0 12px;font-size:17px;display:flex;align-items:center;gap:10px;letter-spacing:-.3px}
+.panel h2 .i{color:var(--blue);font-size:20px}.panel h2 small{font-weight:500;color:var(--muted);font-size:13px}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-size:13px;color:#3b4a73;padding:10px 8px;background:#f3f6fd}
+td{padding:11px 8px;border-top:1px solid #edf1fa;vertical-align:middle}
+.bedn{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px}.bedn .i{color:var(--blue);font-size:18px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12px;border-radius:10px;padding:6px 10px;text-transform:uppercase}
+.pill .i{font-size:18px}.pill.good{background:#dcfce7;color:#15803d}.pill.warn{background:#fef3c7;color:#b45309}.pill.bad{background:#fee2e2;color:#b91c1c}.pill.info{background:#e0e7ff;color:#3730a3}
+.alertcount{margin-left:auto;background:#f97316;color:#fff;border-radius:50%;width:28px;height:28px;display:grid;place-items:center;font-size:14px}
+.sev{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.sev div{border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;border:1px solid var(--line)}
+.sev .i{font-size:24px}.sev b{display:block;font-size:18px;line-height:1}.sev small{font-weight:600}
+.sev .h{background:#fdeaea;color:#b91c1c}.sev .m{background:#fff4dc;color:#b45309}.sev .n{background:#eaf0ff;color:#1d4ed8}
+.alert{border-radius:14px;padding:12px 14px;margin-top:10px;border:1px solid transparent}
+.alert.h{background:#fdeaea;border-color:#f8cccc}.alert.m{background:#fff4dc;border-color:#fbe3a8}.alert.n{background:#eaf0ff;border-color:#cdd9fb}
+.alert .row{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px}.alert .row .i{font-size:20px}.alert .row span{margin-left:auto;font-weight:500;font-size:13px;color:var(--muted)}
+.alert p{margin:4px 0 8px;color:#2a3558}
+.ack{display:inline-flex;align-items:center;gap:6px;color:#15803d;font-weight:600;background:#e3f6ea;border-radius:10px;padding:6px 12px}
+.empty{color:var(--muted);padding:16px;text-align:center}
+/* detail */
+.detail,.hide{display:none}.detail.show{display:block}
+.dtop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 18px;box-shadow:var(--sh)}
+.dtop h1{margin:0;font-size:32px}.dtop .bedi{font-size:26px;color:var(--blue)}
+.tag{background:#eef3ff;border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-weight:600;font-size:13px}
+.tag.on{background:#dcfce7;color:#15803d;border-color:#bbf0cd;display:flex;align-items:center;gap:6px}.tag.off{background:#fee2e2;color:#b91c1c;border-color:#fbcaca}
+.tabs{display:flex;gap:6px;margin:14px 0}.tab{display:flex;align-items:center;gap:8px;border:0;background:none;padding:10px 18px;border-radius:10px;font:600 15px inherit;color:var(--navy);cursor:pointer}
+.tab .i{font-size:17px;color:#2f5fd0}.tab.on{background:var(--blue);color:#fff}.tab.on .i{color:#fff}
+.top3{display:grid;grid-template-columns:1.2fr 1.1fr .8fr;gap:14px;margin-bottom:14px}
+.rd{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rd>div{border-radius:12px;padding:10px 14px}.rd .t{display:flex;align-items:center;gap:8px;font-weight:600}.rd .t .i{font-size:20px}
+.rd b{font-size:22px;display:block;margin-top:2px}.rd .w{color:#dc2626;font-weight:600;font-size:15px}
+.live .rd>div{background:#fdeeee}.last .rd>div{background:#eaf8ef}
+.note{margin-top:10px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}.note .i{color:var(--blue);font-size:18px}
+.tempv{display:flex;align-items:center;gap:10px;font-size:26px;font-weight:600}.tempv .i{font-size:32px}
+.rel{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mod{display:flex;align-items:flex-start;gap:12px;border-radius:14px;padding:14px;border:1px solid transparent;background:#f3f6fd}
+.mod>.i{font-size:26px;flex:none}.mod b{font-size:16px;display:block}.mod span{font-size:13px;color:#3a4766}
+.mod .cf{margin-left:auto;background:#fff;border-radius:10px;padding:6px 10px;text-align:center;font-size:12px;color:var(--muted)}.mod .cf b{font-size:17px;color:var(--navy)}
+.mod.good{background:#e8f8ee;border-color:#c9eed7;color:#15803d}.mod.good .i{color:#16a34a}
+.mod.warn{background:#fff6df;border-color:#fbe3a8;color:#b45309}.mod.warn .i{color:#f59e0b}
+.mod.bad{background:#fdeaea;border-color:#f8cccc;color:#b91c1c}.mod.bad .i{color:#dc2626}
+.mod.good span,.mod.warn span,.mod.bad span{color:#3a4766}
+.chartrow{display:flex;gap:12px;align-items:stretch}.chartrow canvas{flex:1;min-width:0;width:100%}
+.leg{width:170px;font-size:13px;display:flex;flex-direction:column;justify-content:center;gap:14px}.leg div{display:flex;align-items:center;gap:8px}.leg i{width:28px;height:3px;border-radius:2px;flex:none}
+.demoflag{font-size:12px;background:#eef3ff;color:var(--blue2);border-radius:8px;padding:3px 8px;margin-left:auto;font-weight:600}
+.bottom{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.two h3{margin:0 0 4px;font-size:16px;display:flex;align-items:center;gap:6px}.two h3 .i{font-size:20px}
+.tl{max-height:230px;overflow:auto}.tl div{display:flex;gap:12px;align-items:center;padding:8px 10px;border-radius:8px;background:#f6f8fd;margin-bottom:6px}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}.tl time{font-weight:600;width:84px;flex:none}
+.actbar{display:flex;align-items:center;gap:12px;background:#e8eefc;border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px;flex-wrap:wrap}
+.actbar .i{font-size:22px;color:var(--blue)}.actbar b{color:var(--blue2)}.actbar .btn{margin-left:auto}
+.settings input{padding:10px;border:1px solid var(--line);border-radius:8px;width:170px;font:inherit}
+@media(max-width:1100px){.cards{grid-template-columns:repeat(2,1fr)}.grid2,.bottom,.top3{grid-template-columns:1fr}.rel{grid-template-columns:1fr}}
+@media(max-width:760px){.app{display:block}.side{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:10px}.brand,.demo{display:none}.nav{display:flex}.nav button{white-space:nowrap;width:auto}.main{padding:16px 12px}.leg{display:none}.two{grid-template-columns:1fr}.sev{grid-template-columns:1fr}}
+
+canvas{display:block;width:100%;max-width:100%}#cPpg{height:150px}#cMot{height:90px}#cHr,#cSp{height:110px}
+</style></head><body>
+<!-- SVG icon set (redrawn to match the supplied icon sheet) -->
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="bed" viewBox="0 0 24 24"><path fill="currentColor" d="M2 4h2v16H2zM4 14h18v6h-2v-3H4zM6 8.5a2.2 2.2 0 1 1 4.4 0 2.2 2.2 0 0 1-4.4 0zM11 11h7a4 4 0 0 1 4 4v1H11z"/></symbol>
+<symbol id="heart" viewBox="0 0 24 24"><path fill="#e53935" d="M12 22C5 16 2 12.5 2 8.7 2 5.6 4.4 3.5 7.1 3.5c1.9 0 3.7 1 4.9 2.8 1.2-1.8 3-2.8 4.9-2.8C19.6 3.5 22 5.6 22 8.7 22 12.5 19 16 12 22z"/><path fill="none" stroke="#fff" stroke-width="1.17" stroke-linecap="round" stroke-linejoin="round" d="M5 12h4l1.5-3 2.5 6 1.5-3H19"/></symbol>
+<symbol id="o2" viewBox="0 0 24 24"><path fill="#2563eb" d="M12 1.5C8 7 4.5 11 4.5 15.2a7.5 7.5 0 0 0 15 0C19.5 11 16 7 12 1.5z"/><text x="12" y="17.5" text-anchor="middle" font-size="8.5" font-weight="800" fill="#fff" font-family="Arial">O₂</text></symbol>
+<symbol id="therm" viewBox="0 0 24 24"><path fill="none" stroke="#e53935" stroke-width="1.43" stroke-linecap="round" d="M9 13.2V5a3 3 0 0 1 6 0v8.2a5 5 0 1 1-6 0zM17.5 5h2M17.5 8h2M17.5 11h2"/><circle cx="12" cy="17" r="2.6" fill="#e53935"/><path stroke="#e53935" stroke-width="1.43" stroke-linecap="round" d="M12 7v10"/></symbol>
+<symbol id="bell" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.5a1.6 1.6 0 0 1 1.6 1.6c3 .8 4.9 3.3 4.9 6.4V15l2 2.5v1H3.5v-1l2-2.5v-4.5c0-3.100 1.900-5.600 4.900-6.400A1.600 1.600 0 0 1 12 2.500zM9.500 20h5a2.500 2.500 0 0 1-5 0z"/><path d="M2.500 9.500a8 8 0 0 0 1.600 5M21.500 9.500a8 8 0 0 1-1.600 5" fill="none" stroke="currentColor" stroke-width="1.04" stroke-linecap="round"/></symbol>
+<symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.500" fill="none" stroke="currentColor" stroke-width="1.43"/><path d="M12 6.500V12l4 2.600" fill="none" stroke="currentColor" stroke-width="1.43" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="wifi" viewBox="0 0 24 24"><path d="M2.500 9a14 14 0 0 1 19 0M5.800 12.500a9.500 9.500 0 0 1 12.400 0M9 16a5 5 0 0 1 6 0" fill="none" stroke="#16a34a" stroke-width="1.56" stroke-linecap="round"/><circle cx="12" cy="19.500" r="1.800" fill="#16a34a"/></symbol>
+<symbol id="wifioff" viewBox="0 0 24 24"><path d="M2.500 9a14 14 0 0 1 19 0M5.800 12.500a9.500 9.500 0 0 1 12.400 0M9 16a5 5 0 0 1 6 0" fill="none" stroke="#dc2626" stroke-width="1.56" stroke-linecap="round"/><circle cx="12" cy="19.500" r="1.800" fill="#dc2626"/><path d="M3 3l18 18" stroke="#dc2626" stroke-width="1.56" stroke-linecap="round"/></symbol>
+<symbol id="check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#16a34a"/><path d="M6.500 12.500l4 4 7-8" fill="none" stroke="#fff" stroke-width="1.82" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="warn" viewBox="0 0 24 24"><path d="M12 2.500 22.500 21h-21z" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.30" stroke-linejoin="round"/><path d="M12 9v5.500" stroke="#fff" stroke-width="1.56" stroke-linecap="round"/><circle cx="12" cy="17.500" r="1.400" fill="#fff"/></symbol>
+<symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#2563eb"/><circle cx="12" cy="7" r="1.600" fill="#fff"/><path d="M12 10.500v7" stroke="#fff" stroke-width="1.69" stroke-linecap="round"/></symbol>
+<symbol id="pulse" viewBox="0 0 24 24"><path d="M1.500 12.500h5l2.500-8 4 16 2.500-8h7" fill="none" stroke="currentColor" stroke-width="1.43" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="bars" viewBox="0 0 24 24"><path fill="currentColor" d="M2 14h4v6H2zM8 10h4v10H8zM14 6h4v14h-4zM20 2h3v18h-3z"/><rect x="1" y="21" width="22" height="1.800" rx=".9" fill="currentColor"/></symbol>
+<symbol id="home" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 1.500 11.500h3V21h5.500v-6h4v6h5.500v-9.500h3z"/></symbol>
+<symbol id="gear" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10 1.500h4l.6 3a8 8 0 0 1 1.900 1.100l2.900-1 2 3.500-2.300 2a8 8 0 0 1 0 2.200l2.300 2-2 3.500-2.900-1a8 8 0 0 1-1.900 1.100l-.6 3h-4l-.6-3a8 8 0 0 1-1.900-1.100l-2.900 1-2-3.500 2.300-2a8 8 0 0 1 0-2.200l-2.300-2 2-3.500 2.900 1A8 8 0 0 1 9.400 4.500zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></symbol>
+<symbol id="help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#2563eb"/><path d="M8.800 9.200a3.200 3.200 0 1 1 4.600 2.900c-.9.500-1.400 1-1.400 2" fill="none" stroke="#fff" stroke-width="1.56" stroke-linecap="round"/><circle cx="12" cy="17.600" r="1.500" fill="#fff"/></symbol>
+<symbol id="touch" viewBox="0 0 24 24"><path d="M9 11V5.500a1.800 1.800 0 0 1 3.600 0V11l5 1.200c1.500.4 2.200 1.500 2 3l-.6 4.800H10l-4-6c-.6-1 .4-2.200 1.500-1.800L9 14" fill="none" stroke="#e53935" stroke-width="1.23" stroke-linejoin="round"/><path d="M6 7a5 5 0 0 1 10 0" fill="none" stroke="#e53935" stroke-width="1.17" stroke-linecap="round"/></symbol>
+<symbol id="axes" viewBox="0 0 24 24"><path d="M12 8.500 17 11.400v5.800L12 20l-5-2.800v-5.800zM12 8.500V3M7 17.200l-4.500 2.600M17 17.200l4.500 2.600" fill="none" stroke="currentColor" stroke-width="1.30" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.500 4.500 12 2l2.500 2.500M2 16.500l.8 3.600 3.500-1M22 16.500l-.8 3.600-3.500-1" fill="none" stroke="currentColor" stroke-width="1.17" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="clip" viewBox="0 0 24 24"><rect x="3.500" y="4.500" width="17" height="17" rx="2.500" fill="none" stroke="currentColor" stroke-width="1.43"/><rect x="8" y="2" width="8" height="5" rx="2" fill="currentColor"/><path d="M7 11.500l1.500 1.600 2.500-3M7 17l1.500 1.600 2.500-3M13 11.500h5M13 17h5" fill="none" stroke="currentColor" stroke-width="1.17" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="list" viewBox="0 0 24 24"><circle cx="3.500" cy="5.500" r="1.800" fill="currentColor"/><circle cx="3.500" cy="12" r="1.800" fill="currentColor"/><circle cx="3.500" cy="18.500" r="1.800" fill="currentColor"/><path d="M8 5.500h14M8 12h14M8 18.500h14" stroke="currentColor" stroke-width="1.69" stroke-linecap="round"/></symbol>
+<symbol id="search" viewBox="0 0 24 24"><circle cx="10.500" cy="10.500" r="7" fill="none" stroke="currentColor" stroke-width="1.56"/><path d="m16 16 5.500 5.500" stroke="currentColor" stroke-width="1.69" stroke-linecap="round"/></symbol>
+<symbol id="back" viewBox="0 0 24 24"><path d="m14.500 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.69" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="nolink" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#dc2626"/><path d="M8.500 15.500l7-7M9 8.500a3.500 3.500 0 0 0-2 6.200M15 15.500a3.500 3.500 0 0 0 2-6.200" fill="none" stroke="#fff" stroke-width="1.30" stroke-linecap="round"/></symbol>
+</defs></svg>
+
+<div class="app">
+<aside class="side">
+ <div class="brand"><div class="logo"><svg class="i"><use href="#pulse"/></svg></div>VitalSync</div>
+ <nav class="nav">
+  <button class="active" data-view="ward"><svg class="i"><use href="#home"/></svg>Ward Overview</button>
+  <button data-view="bed"><svg class="i"><use href="#bed"/></svg>Bed Details</button>
+  <button data-view="alerts"><svg class="i" style="color:#2f5fd0"><use href="#bell"/></svg>Alerts &amp; Events</button>
+  <button data-view="trends"><svg class="i"><use href="#bars"/></svg>Trends</button>
+  <button data-view="settings"><svg class="i"><use href="#gear"/></svg>Settings</button>
+  <button data-view="help"><svg class="i"><use href="#help"/></svg>Help</button>
+ </nav>
+ <div class="demo"><svg class="i"><use href="#pulse"/></svg><b>VitalSync</b><span>Monitoring Prototype (Demo)</span></div>
+</aside>
+
+<main class="main">
+<!-- ============ WARD OVERVIEW ============ -->
+<div id="overview">
+ <div class="top"><h1>Ward 1 — General Care</h1>
+  <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+   <div class="clock"><svg class="i"><use href="#clock"/></svg><span id="clock">--:--:--</span></div>
+   <div class="srv" id="connection"><svg class="i"><use href="#wifioff"/></svg><span id="connText">Serial disconnected</span></div>
+   <button class="btn" id="connect">Connect ESP32</button>
+  </div></div>
+ <div class="bar">
+  <label class="search"><svg class="i" style="color:var(--blue);font-size:22px"><use href="#search"/></svg><input id="q" placeholder="Search bed number or node ID"></label>
+  <button class="chip on" data-f="all" id="fAll">All beds (0)</button>
+  <button class="chip" data-f="attn" id="fAttn">Needs attention (0)</button>
+  <button class="chip" data-f="off" id="fOff">Offline (0)</button>
+ </div>
+ <section class="cards">
+  <div class="stat b"><svg class="i" style="color:#2563eb"><use href="#bed"/></svg><div><small>Total Beds</small><b id="cTot">0</b></div></div>
+  <div class="stat g"><svg class="i"><use href="#check"/></svg><div><small>Reliable</small><b id="cRel">0</b></div></div>
+  <div class="stat a"><svg class="i"><use href="#warn"/></svg><div><small>Needs Attention</small><b id="cAtt">0</b></div></div>
+  <div class="stat r"><svg class="i"><use href="#nolink"/></svg><div><small>Offline</small><b id="cOff">0</b></div></div>
+ </section>
+ <section class="grid2">
+  <div class="panel"><h2><svg class="i"><use href="#bed"/></svg>Bed List <small id="bedCount"></small></h2>
+   <table><thead><tr><th>Bed</th><th>Status</th><th>Reason (current state)</th><th>Last Update</th><th></th></tr></thead><tbody id="bedRows"></tbody></table>
+   <div class="empty" id="bedEmpty">No beds yet — connect the ESP32 to start receiving data.</div></div>
+  <div class="panel" id="alertsPanel"><h2><svg class="i"><use href="#bell"/></svg>Active Alerts <span class="alertcount" id="alertN">0</span></h2>
+   <div class="sev"><div class="h"><svg class="i"><use href="#warn" style="color:red"/></svg><span><small>High</small><b id="sH">0</b></span></div>
+    <div class="m"><svg class="i"><use href="#warn"/></svg><span><small>Medium</small><b id="sM">0</b></span></div>
+    <div class="n"><svg class="i"><use href="#info"/></svg><span><small>Info</small><b id="sI">0</b></span></div></div>
+   <div id="alertList"></div>
+   <div class="stamp sub" id="portInfo" style="margin-top:12px;font-size:12px;color:var(--muted)">Choose the ESP32 COM port.</div></div>
+ </section>
+</div>
+
+<!-- ============ BED DETAIL ============ -->
+<div class="detail" id="detail">
+ <div class="dtop">
+  <div class="logo" style="width:44px;height:44px"><svg class="i"><use href="#pulse"/></svg></div>
+  <svg class="i bedi"><use href="#bed"/></svg><h1 id="detailBed">Bed 01</h1>
+  <span class="tag" id="node">Node: VS_NODE_01</span>
+  <span class="tag off" id="onl">● Offline</span>
+  <span style="color:var(--muted);font-weight:600">Last Packet: <span id="lastPkt">—</span></span>
+  <button class="btn ghost" id="back" style="margin-left:auto;display:flex;gap:6px;align-items:center"><svg class="i"><use href="#back"/></svg>Back to Ward</button>
+ </div>
+ <div class="tabs"><button class="tab on" data-tab="wave"><svg class="i"><use href="#pulse"/></svg>Waveforms</button>
+  <button class="tab" data-tab="trend"><svg class="i"><use href="#bars"/></svg>Trends</button>
+  <button class="tab" data-tab="events"><svg class="i"><use href="#list"/></svg>Events</button></div>
+
+ <section class="top3">
+  <div class="panel live"><h2><svg class="i" style="color:#2563eb"><use href="#wifi"/></svg>Current Reading <small>(Live)</small></h2>
+   <div class="rd"><div><div class="t"><svg class="i"><use href="#heart"/></svg>HR</div><b id="hr">—</b><span class="w" id="hrW"></span></div>
+    <div><div class="t"><svg class="i"><use href="#o2"/></svg>SpO₂ <small style="font-weight:500">(estimate)</small></div><b id="spo2">—</b><span class="w" id="spW"></span></div></div>
+   <div class="note"><svg class="i"><use href="#info"/></svg><span id="hrNote">Waiting for data.</span></div></div>
+  <div class="panel last"><h2><svg class="i"><use href="#check"/></svg>Last Reliable Reading</h2>
+   <div class="rd"><div><div class="t"><svg class="i"><use href="#heart"/></svg>HR</div><b id="lastHr">—</b></div>
+    <div><div class="t"><svg class="i"><use href="#o2"/></svg>SpO₂ <small style="font-weight:500">(estimate)</small></div><b id="lastSp">—</b></div></div>
+   <div class="note" style="justify-content:center">Last reliable at <span id="lastAt">—</span></div></div>
+  <div class="panel"><h2><svg class="i"><use href="#therm"/></svg>Temperature</h2>
+   <div class="tempv"><svg class="i"><use href="#therm"/></svg><span id="temp">—</span></div>
+   <div class="note" style="margin-top:8px">At <span id="tempAt">—</span> · Independent sensor reading</div>
+   <div class="note" id="spo2Note" style="margin-top:2px">Uncalibrated estimate</div></div>
+ </section>
+
+ <section class="panel" style="margin-bottom:14px"><h2><svg class="i" style="color:#2563eb"><use href="#clip"/></svg>Signal Reliability <small>(Model Assessment)</small></h2>
+  <div class="rel">
+   <div class="mod" id="m1"><svg class="i"><use href="#check"/></svg><div><b>Contact: —</b><span>Waiting</span></div><div class="cf">Conf.<b>—</b></div></div>
+   <div class="mod" id="m2"><svg class="i"><use href="#warn"/></svg><div><b>Model 2 (Motion): —</b><span>Waiting</span></div><div class="cf">Conf.<b>—</b></div></div>
+   <div class="mod" id="m3"><svg class="i"><use href="#nolink"/></svg><div><b>Model 3 (Post-filter SQI): —</b><span>Waiting</span></div><div class="cf">Conf.<b>—</b></div></div>
+  </div></section>
+
+ <div id="tab-wave">
+  <section class="panel"><h2><svg class="i" style="color:#2563eb"><use href="#pulse"/></svg>Heart Rate Waveform <small>(follows BPM)</small><span class="demoflag" id="wfFlag">Waiting for waveform data</span></h2>
+   <div class="chartrow"><canvas id="cPpg" data-h="150"></canvas>
+    <div class="leg"><div><i style="background:#ef4444"></i>Raw Red PPG</div><div><i style="background:#3b82f6"></i>Raw IR PPG</div><div><i style="background:#22c55e"></i>NLMS Residual</div><div><i style="background:#a855f7"></i>Moving-Average Filtered PPG</div></div></div>
+   <h2 id="motH" style="margin-top:14px"><svg class="i" style="color:#2563eb"><use href="#axes"/></svg>Motion Signals <small>(same window)</small></h2>
+   <div class="chartrow" id="motRow"><canvas id="cMot" data-h="90"></canvas>
+    <div class="leg"><div><i style="background:#3b82f6"></i>Acceleration Mag. (|a|)</div><div><i style="background:#f59e0b"></i>Gyroscope Mag. (|ω|)</div></div></div></section>
+ </div>
+
+ <section class="bottom" id="tab-trend">
+  <div class="panel"><h2><svg class="i"><use href="#bars"/></svg>Historical Trends <small>(last ~10 minutes, prototype)</small></h2>
+   <div class="two"><div><h3><svg class="i"><use href="#heart"/></svg>HR (BPM)</h3><canvas id="cHr" data-h="110"></canvas></div>
+    <div><h3><svg class="i"><use href="#o2"/></svg>SpO₂ (%)</h3><canvas id="cSp" data-h="110"></canvas></div></div>
+   <div class="note"><span style="display:inline-block;width:14px;height:14px;background:#e5e7eb;border-radius:3px"></span> = Withheld (SQI poor / unreliable)</div></div>
+  <div class="panel" id="tab-events"><h2><svg class="i"><use href="#list"/></svg>Event Timeline <small id="evBed">(Bed 01)</small></h2><div class="tl" id="tl"><div class="empty">No events yet.</div></div></div>
+ </section>
+
+ <div class="actbar"><svg class="i"><use href="#clip"/></svg><span><b>Action (Nurse):</b> <b id="action" style="font-weight:600">Connect the device and check sensor contact.</b></span>
+  <button class="btn" id="ackBtn">Acknowledge alert</button></div>
+
+ <section class="panel settings" style="margin-top:14px" id="calBox"><h2><svg class="i"><use href="#gear"/></svg>SpO₂ calibration</h2>
+  <div class="note" style="margin:0 0 10px">Keep your finger on the sensor next to a reference pulse oximeter, wait for a steady reading, then enter its SpO₂.</div>
+  <input id="refSpo2" type="number" min="70" max="100" step="1" placeholder="Reference SpO₂ %"> <button class="btn" id="calSpo2">Calibrate</button> <button class="btn ghost" id="calReset">Reset</button> <span class="note" id="calMsg" style="display:inline-flex"></span></section>
+</div>
+</main></div>
+
+<script>
+const conns=[];const $=id=>document.getElementById(id);
+const beds={};            // bed_id -> {x,t,hist[],events[],acked,lastState,lastValid,wave}
+let sel=null,filter='all';
+const pad=n=>String(n).padStart(2,'0');
+const fmt=d=>{let h=d.getHours(),a=h>=12?'PM':'AM';h=h%12||12;return pad(h)+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())+' '+a};
+const fmtS=d=>fmt(d).slice(0,5)+' '+fmt(d).slice(-2);
+setInterval(()=>$('clock').textContent=fmt(new Date()),1000);$('clock').textContent=fmt(new Date());
+const ts=x=>(x||'WAITING').replaceAll('_',' ');
+const ic=(n,s)=>`<svg class="i"${s?` style="${s}"`:''}><use href="#${n}"/></svg>`;
+
+/* ---------- classification ---------- */
+function bedClass(b){const s=b.x.signal_state||'';const off=Date.now()-b.t>15000||s==='DEVICE_OFFLINE';
+ if(off)return{k:'off',pill:'bad',icon:'nolink',label:'Device offline',reason:'Last packet '+fmt(new Date(b.t)),sev:'n',title:'Device offline',text:'Check node/network and power',alert:'n'};
+ if(s.includes('READING_VALID')&&!s.includes('LOW_QUALITY'))return{k:'ok',pill:'good',icon:'check',label:'Reliable',reason:'Good contact · Good quality'};
+ if(s.includes('CONTACT'))return{k:'attn',pill:'bad',icon:'therm',label:'Sensor contact',reason:'Reposition finger clip',alert:'m',title:'Contact not detected',text:'Reposition sensor (finger clip)'};
+ if(s.includes('MOTION'))return{k:'attn',pill:'warn',icon:'warn',label:'Needs attention',reason:'Motion affected · Quality poor',alert:'h',title:'Motion remains after filtering',text:'Fresh HR/SpO₂ withheld (current SQI poor)'};
+ if(s.includes('SETTLING'))return{k:'attn',pill:'warn',icon:'warn',label:'Settling',reason:'Collecting full 8-second window',alert:'n',title:'Signal settling',text:'Keep the finger steady'};
+ return{k:'attn',pill:'warn',icon:'warn',label:'Needs attention',reason:ts(s)+(s.includes('LOW_QUALITY')?' · Quality poor':''),alert:'h',title:'Low signal quality',text:'Fresh HR/SpO₂ withheld or low quality'};}
+function action(s){s=s||'';if(s.includes('SETTLING'))return'Keep the finger steady; collecting a full 8-second signal window.';if(s.includes('CONTACT'))return'Reposition the finger sensor and check clip contact.';if(s.includes('MOTION'))return'Keep finger steady; check clip position and contact.';if(s.includes('QUALITY'))return'Keep finger steady; check clip position and contact.';if(s==='DEVICE_OFFLINE')return'Check node, network and power.';return'Continue monitoring; the most recent window is reliable.'}
+
+/* ---------- ingest ---------- */
+let _rt=0;function schedRender(){if(_rt)return;_rt=setTimeout(()=>{_rt=0;render()},250)}
+const claim={};
+function bedKey(x,c){let id=x.bed_id||('bed-0'+c.n);if(!c.map)c.map={};if(c.map[id])return c.map[id];if(claim[id]==null||claim[id]===c.n){claim[id]=c.n;return c.map[id]=id}let k=1,nid;do{nid='bed-0'+(k++)}while(claim[nid]!=null&&claim[nid]!==c.n);claim[nid]=c.n;return c.map[id]=nid}
+function ingest(x,c){const id=c?bedKey(x,c):(x.bed_id||'bed-01');let b=beds[id]||(beds[id]={hist:[],events:[],acked:{},lastValid:null,lastState:null,wave:null,alertKey:null});
+ b.x=x;b.t=Date.now();if(c)b.src=c;const s=x.signal_state||'WAITING',v=s.includes('READING_VALID')&&!s.includes('LOW_QUALITY');
+ if(b.lastState!==s){b.events.unshift({t:new Date(),txt:v?'Reliable reading restored':ts(s)+(x.model3&&x.model3!=='NO_SIGNAL'?' ('+x.model3+')':''),c:v?'#22c55e':s.includes('MOTION')?'#f59e0b':'#ef4444'});b.events=b.events.slice(0,60);b.acked.cur=false;b.lastState=s}
+ if(v&&x.hr_bpm!=null){b.lastValid={hr:x.hr_bpm,sp:x.spo2_estimate,t:new Date()}}
+ {const now=Date.now(),pt={t:now,hr:x.hr_bpm,sp:x.spo2_estimate,temp:x.temperature_c,pi:x.perfusion_index,ok:v},L=b.hist[b.hist.length-1];if(L&&now-L.t<1000&&L.ok===v)Object.assign(L,pt,{t:L.t});else b.hist.push(pt);if(b.hist.length>700||(b.hist[0]&&b.hist[0].t<now-10*60e3)){const cut=now-10*60e3;b.hist=b.hist.filter(h=>h.t>cut)}}
+ // optional waveform fields (arrays) if firmware sends them
+ const A=k=>Array.isArray(x[k])?x[k]:null;
+ if(A('ppg_red')||A('ppg_ir')||A('acc_mag'))b.wave={red:A('ppg_red'),ir:A('ppg_ir'),nlms:A('nlms_residual'),ma:A('ma_ppg'),acc:A('acc_mag'),gyro:A('gyro_mag')};
+ if(!sel)sel=id;schedRender()}
+
+/* ---------- render ---------- */
+function render(){
+ const ids=Object.keys(beds).sort();const list=ids.map(id=>({id,b:beds[id],c:bedClass(beds[id])}));
+ const n=list.length,ok=list.filter(o=>o.c.k==='ok').length,att=list.filter(o=>o.c.k==='attn').length,off=list.filter(o=>o.c.k==='off').length;
+ $('cTot').textContent=n;$('cRel').textContent=ok;$('cAtt').textContent=att;$('cOff').textContent=off;
+ $('fAll').textContent=`All beds (${n})`;$('fAttn').textContent=`Needs attention (${att})`;$('fOff').textContent=`Offline (${off})`;$('bedCount').textContent=`(${n})`;
+ const q=$('q').value.trim().toLowerCase();
+ const rows=list.filter(o=>(filter==='all'||o.c.k===filter)&&(!q||(o.id+' '+(o.b.x.node_id||'')).toLowerCase().includes(q)));
+ $('bedEmpty').style.display=rows.length?'none':'block';
+ $('bedRows').innerHTML=rows.map(o=>{const bn=o.id.replace('bed-','Bed ');return`<tr><td><div class="bedn">${ic('bed')}${bn}</div></td><td><span class="pill ${o.c.pill}">${ic(o.c.icon)}${o.c.label}</span></td><td>${o.c.reason}</td><td>${fmt(new Date(o.b.t))}</td><td><button class="btn ghost sm" data-open="${o.id}">View details</button></td></tr>`}).join('');
+ // alerts
+ const al=list.filter(o=>o.c.alert);let h=0,m=0,i=0;
+ $('alertList').innerHTML=al.map(o=>{const a=o.c.alert;a==='h'?h++:a==='m'?m++:i++;const acked=o.b.acked.cur&&o.c.k!=='off'||o.b.acked.off&&o.c.k==='off';const bn=o.id.replace('bed-','Bed ');
+  return`<div class="alert ${a}"><div class="row">${ic(a==='n'?'info':'warn',a==='h'?'filter:hue-rotate(-40deg) saturate(2)':'')}${bn}<span>${fmt(new Date(o.b.t))}</span></div><p><b>${o.c.title}</b><br>${o.c.text}</p>${acked?`<span class="ack">${ic('check')}Acknowledged</span>`:`<button class="btn ghost sm" data-ack="${o.id}">Acknowledge</button>`}</div>`}).join('')||'<div class="empty">No active alerts.</div>';
+ $('sH').textContent=h;$('sM').textContent=m;$('sI').textContent=i;$('alertN').textContent=al.length;
+ // header
+ const on=conns.length>0;$('connection').className='srv'+(on?' on':'');$('connection').innerHTML=ic(on?'wifi':'wifioff')+`<span>${on?(conns.length>1?conns.length+' ESP32s connected':'Serial connected'):'Serial disconnected'}</span>`;
+ if(sel&&beds[sel])renderDetail();}
+function renderDetail(){const b=beds[sel],x=b.x,c=bedClass(b),s=x.signal_state||'WAITING',v=c.k==='ok';
+ const bn=sel.replace('bed-','Bed ');$('detailBed').textContent=bn;$('evBed').textContent=`(${bn})`;$('node').textContent='Node: '+(x.node_id||'VS_NODE_01');
+ const off=c.k==='off';$('onl').textContent=off?'● Offline':'● Online';$('onl').className='tag '+(off?'off':'on');$('lastPkt').textContent=fmt(new Date(b.t));
+ const withheld=x.hr_bpm==null;
+ $('hr').innerHTML=withheld?'-- --':Math.round(x.hr_bpm)+' <small style="font-size:14px">BPM</small>';$('hrW').textContent=withheld?'WITHHELD':'';
+ $('spo2').innerHTML=x.spo2_estimate==null?'-- --':Math.round(x.spo2_estimate)+' <small style="font-size:14px">%</small>';$('spW').textContent=x.spo2_estimate==null?'WITHHELD':'';
+ $('hrNote').textContent=withheld?'Withheld: current SQI is poor (see Signal Reliability).':(s.includes('LOW_QUALITY')?'Signal quality poor — use with caution':'Fresh reading');
+ const lv=b.lastValid||(x.last_reliable_hr_bpm!=null?{hr:x.last_reliable_hr_bpm,sp:null,t:null}:null);
+ $('lastHr').innerHTML=lv?Math.round(lv.hr)+' <small style="font-size:14px">BPM</small>':'—';$('lastSp').innerHTML=lv&&lv.sp!=null?Math.round(lv.sp)+' <small style="font-size:14px">%</small>':'—';$('lastAt').textContent=lv&&lv.t?fmtS(lv.t):'—';
+ $('temp').textContent=x.temperature_c==null?'—':x.temperature_c+' °C';$('tempAt').textContent=fmtS(new Date(b.t));
+ $('spo2Note').textContent=(x.spo2_offset?'SpO₂ calibrated ('+(x.spo2_offset>0?'+':'')+x.spo2_offset.toFixed(1)+')':'SpO₂ uncalibrated')+(x.perfusion_index!=null?' · PI '+x.perfusion_index.toFixed(1)+'%':'');
+ // models
+ const cls=l=>!l||l==='NO_SIGNAL'?'':l.includes('GOOD')||l==='CLEAN'?'good':l.includes('POOR')||l.includes('SEVERE')||l.startsWith('NO_')?'bad':'warn';
+ const ico=k=>({good:'check',warn:'warn',bad:'nolink','':'info'}[k]);
+ const cf=v=>v==null?'—':Number(v).toFixed(2);
+ const m1=x.contact_model,m2=x.model2||x.model2_status,m3=x.model3;
+ const mod=(id,title,l,desc,conf)=>{const k=cls(l);$(id).className='mod '+k;$(id).innerHTML=`${ic(ico(k))}<div><b>${title}: ${l?ts(l):'—'}</b><span>${desc}</span></div><div class="cf">Conf.<b>${cf(conf)}</b></div>`};
+ mod('m1','Contact',m1,m1&&m1.includes('GOOD')?'Finger contact is stable.<br>PPG amplitude adequate.':(m1==='NO_SIGNAL'?'No finger detected':'Check finger/clip contact.'),x.contact_conf);
+ mod('m2','Model 2 (Motion)',m2,m2==='NO_SIGNAL'?'No finger detected':(m2&&m2.includes('CLEAN')?'No significant motion.':'Motion affected.<br>Residual motion present.'),x.model2_conf);
+ mod('m3','Model 3 (Post-filter SQI)',m3,m3==='NO_SIGNAL'?'No finger detected':m3==='SETTLING'?'Settling '+(x.settle_pct!=null?x.settle_pct+'%':'')+' – hold finger steady':(x.sqi_reason&&x.sqi_reason!=='OK'?ts(x.sqi_reason):(m3&&m3.includes('GOOD')?'Filtered PPG is reliable.':'Filtered PPG still unreliable.<br>High residual distortion.')),x.model3_conf);
+ // timeline & action
+ $('tl').innerHTML=b.events.length?b.events.map(e=>`<div><span class="dot" style="background:${e.c}"></span><time>${fmt(e.t)}</time><span>${e.txt}</span></div>`).join(''):'<div class="empty">No events yet.</div>';
+ $('action').textContent=action(s);$('ackBtn').style.display=c.alert?'':'none';
+ const ak=b.acked.cur;$('ackBtn').textContent=ak?'✓ Alert Acknowledged':'Acknowledge alert';$('ackBtn').disabled=ak;
+ drawAll();}
+
+/* ---------- charts ---------- */
+function setup(cv){const r=devicePixelRatio||1,w=cv.clientWidth||600,h=+cv.dataset.h;cv.width=w*r;cv.height=h*r;cv.style.height=h+'px';const g=cv.getContext('2d');g.setTransform(r,0,0,r,0,0);g.clearRect(0,0,w,h);return{g,w,h}}
+function axes(g,w,h,L,B,yl,xl,ymin,ymax,ticks){g.strokeStyle='#e6ecf8';g.fillStyle='#4b5a80';g.font='10px Arial';g.lineWidth=1;g.textAlign='right';
+ ticks.forEach(t=>{const y=B.t+(1-(t-ymin)/(ymax-ymin))*(h-B.t-B.b);g.beginPath();g.moveTo(L,y);g.lineTo(w-6,y);g.stroke();g.fillText(t,L-6,y+4)});
+ g.strokeStyle='#9aa7c7';g.beginPath();g.moveTo(L,B.t);g.lineTo(L,h-B.b);g.lineTo(w-6,h-B.b);g.stroke();
+ g.textAlign='center';xl.forEach(([f,t])=>g.fillText(t,Math.min(L+f*(w-L-6),w-14),h-B.b+16));}
+function wave(g,arr,col,w,h,L,B,ymin,ymax,off){if(!arr||!arr.length)return;const lo=Math.min(...arr),hi=Math.max(...arr),sp=(hi-lo)||1;g.strokeStyle=col;g.lineWidth=1.4;g.beginPath();
+ arr.forEach((v,i)=>{const n=((v-lo)/sp-.5)*(off.amp||1)+off.c;const X=L+i/(arr.length-1)*(w-L-6),Y=B.t+(1-(n-ymin)/(ymax-ymin))*(h-B.t-B.b);i?g.lineTo(X,Y):g.moveTo(X,Y)});g.stroke()}
+function demoWave(n,f,ph,noise){return Array.from({length:n},(_,i)=>Math.sin(i/n*8*f*Math.PI*2/8*1.25+ph)+(noise?(Math.sin(i*1.7)*noise):0))}
+function nice(lo,hi){if(!(hi>lo)){lo-=1;hi+=1}const p=(hi-lo)*.15;lo-=p;hi+=p;const st=Math.max(.1,Math.pow(10,Math.floor(Math.log10((hi-lo)/4))));const m=[1,2,5,10].map(k=>k*st).find(k=>(hi-lo)/k<=5)||st*10;lo=Math.floor(lo/m)*m;hi=Math.ceil(hi/m)*m;const t=[];for(let v=lo;v<=hi+1e-9;v+=m)t.push(+v.toFixed(2));return{lo,hi,t}}
+function setLeg(el,items){el.innerHTML=items.map(([c,t])=>`<div><i style="background:${c}"></i>${t}</div>`).join('')}
+function pleth(p){p-=Math.floor(p);const up=p<.17?Math.sin(p/.17*Math.PI/2):Math.pow(Math.cos((p-.17)/.83*Math.PI/2),1.6)*.92+.02;return up*.82+.12*Math.exp(-Math.pow((p-.42)/.05,2))*(p>.3?1:0)}
+const newMon=()=>({buf:new Float32Array(480).fill(NaN),i:0,t:0,ph:0});let _m0=newMon();
+function drawPpg(b){const cv=$('cPpg');const {g,w,h}=setup(cv);const mon=b?(b.mon||(b.mon=newMon())):_m0;const x=b&&b.x||{},now=Date.now(),has=!!b&&now-b.t<15000;
+ const valid=has&&x.hr_bpm>0&&(x.signal_state||'').includes('READING_VALID');
+ const hr=x.hr_bpm>0?x.hr_bpm:(x.last_reliable_hr_bpm>0?x.last_reliable_hr_bpm:(b&&b.lastValid?b.lastValid.hr:0));
+ const N=mon.buf.length,SEC=6;
+ // advance sweep buffer (80 samples/s) following the live BPM
+ const dt=mon.t?Math.min(.5,(now-mon.t)/1000):0;mon.t=now;let n=Math.round(dt*N/SEC);
+ while(n-->0){mon.ph+=(hr/60)*(SEC/N);mon.buf[mon.i]=has&&hr?pleth(mon.ph):NaN;mon.i=(mon.i+1)%N;mon.buf[(mon.i+14)%N]=NaN}
+ const col=valid?'#22e58a':'#f5a524';
+ g.fillStyle='#0a1322';g.fillRect(0,0,w,h);g.strokeStyle='rgba(120,160,200,.10)';g.lineWidth=1;
+ for(let X=0;X<w;X+=w/12){g.beginPath();g.moveTo(X,0);g.lineTo(X,h);g.stroke()}for(let Y=0;Y<h;Y+=h/4){g.beginPath();g.moveTo(0,Y);g.lineTo(w,Y);g.stroke()}
+ g.strokeStyle=col;g.lineWidth=1.8;g.lineJoin='round';g.shadowColor=col;g.shadowBlur=6;g.beginPath();let pen=false;
+ for(let k=0;k<N;k++){const v=mon.buf[k];if(isNaN(v)){pen=false;continue}const X=k/N*w,Y=h-10-v*(h-24);pen?g.lineTo(X,Y):g.moveTo(X,Y);pen=true}g.stroke();g.shadowBlur=0;
+ if(!has){g.fillStyle='#7d8cab';g.font='12px Arial';g.textAlign='center';g.fillText(b?'Device offline':'Waiting for data',w/2,h/2)}
+ $('wfFlag').textContent=!b?'Waiting for data':!has?'Device offline':valid?'Live · follows HR':'Signal withheld · last HR';
+ const lg=document.querySelectorAll('.leg')[0];lg.innerHTML=`<div style="display:block"><div style="font-size:12px;color:var(--muted)">HEART RATE</div><div style="font-size:38px;font-weight:600;line-height:1.1;color:${valid?'#16a34a':'#d97706'}">${hr||'--'}</div><div style="font-size:12px;color:var(--muted)">bpm${valid?'':' (last)'}</div></div>`;
+ // motion panel only when the device sends motion arrays
+ const W=b&&b.wave,hasMot=!!(W&&(W.acc||W.gyro));$('motH').style.display=$('motRow').style.display=hasMot?'':'none';
+ if(hasMot){const m=setup($('cMot')),g2=m.g,w2=m.w,h2=m.h,B2={t:4,b:20},L=40;const mx=Math.max(1,...(W.acc||[]),...(W.gyro||[]));const sc=nice(0,mx);axes(g2,w2,h2,L,B2,'',[0,1,2,3,4,5,6,7,8].map(i=>[i/8,i]),sc.lo,sc.hi,sc.t);
+  setLeg(document.querySelectorAll('.leg')[1],[['#3b82f6','Acceleration Mag. (|a|)'],['#f59e0b','Gyroscope Mag. (|ω|)']]);
+  const plot=(arr,c)=>{if(!arr)return;g2.strokeStyle=c;g2.lineWidth=1.3;g2.beginPath();arr.forEach((v,i)=>{const X=L+i/(arr.length-1)*(w2-L-6),Y=B2.t+(1-(v-sc.lo)/(sc.hi-sc.lo))*(h2-B2.t-B2.b);i?g2.lineTo(X,Y):g2.moveTo(X,Y)});g2.stroke()};plot(W.acc,'#3b82f6');plot(W.gyro,'#f59e0b')}}
+function drawTrend(cv,key,lo,hi,ticks,col,b){const {g,w,h}=setup(cv),L=34,B={t:6,b:22};const H=b?b.hist:[];{const v=H.filter(p=>p.ok&&p[key]!=null).map(p=>p[key]);if(v.length){const n=nice(Math.min(...v),Math.max(...v));lo=n.lo;hi=n.hi;ticks=n.t}}const now=Date.now(),span=10*60e3,t0=now-span;
+ axes(g,w,h,L,B,'',[0,.25,.5,.75,1].map(f=>[f,(()=>{const d=new Date(t0+f*span);return pad(d.getHours())+':'+pad(d.getMinutes())})()]),lo,hi,ticks);
+ const X=t=>L+(t-t0)/span*(w-L-6),Y=v=>B.t+(1-(Math.min(Math.max(v,lo),hi)-lo)/(hi-lo))*(h-B.t-B.b);
+ // withheld shading
+ g.fillStyle='rgba(148,163,184,.22)';let st=null;H.forEach((p,i)=>{if(!p.ok&&st==null)st=p.t;if((p.ok||i===H.length-1)&&st!=null){g.fillRect(X(st),B.t,Math.max(2,X(p.t)-X(st)),h-B.t-B.b);st=null}});
+ g.strokeStyle=col;g.fillStyle=col;g.lineWidth=1.4;let prev=null;H.forEach(p=>{const v=p[key];if(v==null||!p.ok){prev=null;return}const x=X(p.t),y=Y(v);if(prev){g.beginPath();g.moveTo(prev[0],prev[1]);g.lineTo(x,y);g.stroke()}g.beginPath();g.arc(x,y,2,0,7);g.fill();prev=[x,y]})}
+let _raf=0;function drawAll(){if(_raf)return;_raf=requestAnimationFrame(()=>{_raf=0;_drawAll()})}
+function _drawAll(){const b=beds[sel];drawPpg(b);drawTrend($('cHr'),'hr',60,100,[60,70,80,90,100],'#2563eb',b);drawTrend($('cSp'),'sp',90,100,[90,92,94,96,98,100],'#2563eb',b)}
+
+/* ---------- navigation ---------- */
+function showView(v){document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.view===v));
+ if(v==='ward'||v==='alerts'){$('overview').classList.remove('hide');$('overview').style.display='';$('detail').classList.remove('show');if(v==='alerts')$('alertsPanel').scrollIntoView({behavior:'smooth',block:'center'});else scrollTo({top:0,behavior:'smooth'});return}
+ $('overview').style.display='none';$('detail').classList.add('show');if(!sel&&Object.keys(beds)[0])sel=Object.keys(beds)[0];
+ if(!beds[sel]){beds[sel='bed-01']={hist:[],events:[],acked:{},lastValid:null,lastState:null,wave:null,x:{},t:0}}
+ render();setTimeout(()=>{drawAll();const t={trends:'tab-trend',settings:'calBox',help:'action',bed:null}[v];if(t)$(t).scrollIntoView({behavior:'smooth',block:'center'});else scrollTo({top:0,behavior:'smooth'})},50)}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));
+$('back').onclick=()=>showView('ward');
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===c));render()});
+$('q').oninput=render;
+document.addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o){sel=o.dataset.open;showView('bed')}const a=e.target.closest('[data-ack]');if(a){const b=beds[a.dataset.ack];b.acked[bedClass(b).k==='off'?'off':'cur']=true;render()}
+ const t=e.target.closest('.tab');if(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));$('tab-wave').style.display=t.dataset.tab==='wave'?'':'none';const tr=t.dataset.tab==='trend'||t.dataset.tab==='events';document.querySelectorAll('#tab-trend').forEach(x=>x.style.display=t.dataset.tab==='wave'||tr?'':'none');drawAll()}});
+$('ackBtn').onclick=()=>{if(sel&&beds[sel]){beds[sel].acked.cur=true;render()}};
+addEventListener('resize',()=>{if($('detail').classList.contains('show'))drawAll()});
+setInterval(()=>{if(Object.keys(beds).length)render()},5000);
+setInterval(()=>{if($('detail').classList.contains('show')&&!document.hidden){if(!_raf)drawPpg(beds[sel])}},40);   // refresh offline detection
+
+/* ---------- Web Serial ---------- */
+let connN=0;
+async function readLoop(c){const d=new TextDecoder();let buf='';
+ while(c.port.readable&&!c.dead){const reader=c.port.readable.getReader();c.reader=reader;
+  try{for(;;){const{value,done}=await reader.read();if(done){c.dead=true;break}buf+=d.decode(value,{stream:true});if(buf.length>20000)buf=buf.slice(-4000);
+    let i;while((i=buf.indexOf('\n'))>=0){const r=buf.slice(0,i).trim();buf=buf.slice(i+1);if(r.startsWith('VS_JSON,'))try{ingest(JSON.parse(r.slice(8)),c)}catch(e){}}}}
+  catch(e){buf='';if(e&&e.name==='NetworkError'&&!c.port.readable)c.dead=true; /* BufferOverrun/Framing/Parity are recoverable: take a new reader and carry on */}
+  finally{try{reader.releaseLock()}catch(e){}}}}
+$('connect').onclick=async()=>{if(!navigator.serial){$('portInfo').textContent='Use Chrome or Edge; Web Serial is unavailable here.';return}
+ let c;try{const port=await navigator.serial.requestPort();await port.open({baudRate:921600,bufferSize:1048576});c={port,n:++connN,writer:port.writable.getWriter()};conns.push(c);
+  $('portInfo').textContent=conns.length+' ESP32 connected at 921600 baud. Click "Connect ESP32" again to add another bed.';$('connect').textContent='Connect another ESP32';render();
+  await readLoop(c);
+ }catch(e){$('portInfo').textContent='Serial connection failed: '+e.message}
+ if(c){const i=conns.indexOf(c);if(i>=0)conns.splice(i,1);if(!conns.length)$('connect').textContent='Connect ESP32';render()}};
+const send=async m=>{const b=beds[sel],c=(b&&b.src&&conns.includes(b.src))?b.src:conns[0];if(!c){$('calMsg').textContent='Connect the ESP32 first.';return}await c.writer.write(new TextEncoder().encode(m+'\n'));$('calMsg').textContent='Sent to '+sel.replace('bed-','Bed ')+': '+m};
+$('calSpo2').onclick=()=>{let v=parseFloat($('refSpo2').value);if(!(v>=70&&v<=100)){$('calMsg').textContent='Enter a value between 70 and 100.';return}send('CAL_SPO2,'+v)};
+$('calReset').onclick=()=>send('CAL_SPO2_RESET');
+render();
+</script></body></html>
